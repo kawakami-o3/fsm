@@ -1,7 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"log"
+	"net/http"
+)
 
 func main() {
-	fmt.Println("vim-go")
+	log.Fatal(http.ListenAndServe(":8080", http.FileServer(http.Dir("./"))))
 }
