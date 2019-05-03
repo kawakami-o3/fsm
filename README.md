@@ -7,3 +7,8 @@ File Sharing for Minimalists
 - [ ] file uploader.
 - [ ] HTTPS
 - [ ] access control
+
+# Note
+
+This project contains a part of golang's source codes (net/http).
+
