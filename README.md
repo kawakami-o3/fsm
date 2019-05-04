@@ -4,6 +4,7 @@ File Sharing for Minimalists
 # ToDo
 
 - [X] file downloader which is compatible with FileServer.
+- [ ] The template system for a file browser. 
 - [ ] file uploader.
 - [ ] HTTPS
 - [ ] access control
