@@ -1,4 +1,4 @@
-module github.com:kawakami-o3/souko
+module github.com/kawakami-o3/souko
 
 require (
 	github.com/cbroglie/mustache v1.0.1
