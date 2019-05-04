@@ -15,6 +15,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/cbroglie/mustache"
+	"github.com/rakyll/statik/fs"
+
+	"github.com/kawakami-o3/souko/statik"
 )
 
 var root = http.Dir(".")
@@ -85,20 +90,53 @@ func fileHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if s.IsDir() {
+
 		files, _ := ioutil.ReadDir("./" + targetPath) // TODO error handling
 
 		html := "<html><head></head><body><ul>"
+		entries := []map[string]string{}
 		for _, f := range files {
 			name := f.Name()
 			href := fmt.Sprintf("%s%s", req.RequestURI, name)
 			html += fmt.Sprintf(`<li><a href="%s">%s</a></li>`, href, name)
+
+			entries = append(entries, map[string]string{
+				"url":  href,
+				"name": name,
+			})
 		}
+
 		html += "<ul></body></html>"
 		io.WriteString(w, html)
+
+		layout, err := loadTemplate("/index.html")
+		fmt.Println(layout, err)
+		fmt.Println(mustache.Render(layout, map[string][]map[string]string{
+			"files": entries,
+		}))
+
 	} else {
 		//io.WriteString(w, "serve file")
 		serveFile(w, req, s)
 	}
+}
+
+func loadTemplate(s string) (string, error) {
+	statikFS, err := fs.New()
+	if err != nil {
+		return "", err
+	}
+
+	file, err := statikFS.Open(s)
+	if err != nil {
+		return "", err
+	}
+
+	body, err := ioutil.ReadAll(file)
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
 }
 
 // from net/http in golang
