@@ -31,6 +31,8 @@ var errNoOverlap = errors.New("invalid range: failed to overlap")
 
 type condResult int
 
+const filesUrlTop = "/files"
+
 const (
 	condNone condResult = iota
 	condTrue
@@ -57,11 +59,24 @@ func redirect(w http.ResponseWriter, req *http.Request, newPath string) {
 	w.WriteHeader(http.StatusMovedPermanently)
 }
 
-func fileHandler(w http.ResponseWriter, req *http.Request) {
-
-	//targetPath := path.Clean(req.URL.Path)
+func router(w http.ResponseWriter, req *http.Request) {
 	targetPath := req.URL.Path
 	fmt.Println(targetPath)
+
+	if strings.Index(targetPath, filesUrlTop) == 0 {
+		handleFiles(w, req)
+	} else if strings.Index(targetPath, "/upload") == 0 {
+		// upload
+		handleUpload(w, req)
+	} else {
+		redirect(w, req, "/files/")
+	}
+}
+
+func handleFiles(w http.ResponseWriter, req *http.Request) {
+
+	//targetPath := path.Clean(req.URL.Path)
+	targetPath := req.URL.Path[len(filesUrlTop):]
 
 	f, err := root.Open(targetPath)
 	if err != nil {
@@ -95,7 +110,7 @@ func fileHandler(w http.ResponseWriter, req *http.Request) {
 		entries := []map[string]string{}
 		for _, f := range files {
 			entries = append(entries, map[string]string{
-				"url": fmt.Sprintf("%s%s", req.RequestURI, f.Name()),
+				"url":  fmt.Sprintf("%s%s", req.RequestURI, f.Name()),
 				"name": f.Name(),
 			})
 		}
@@ -587,7 +602,65 @@ func rangesMIMESize(ranges []httpRange, contentType string, contentSize int64) (
 	return
 }
 
+func mkdirRec(dirname string) {
+	_, err := os.Stat(dirname)
+	if err == nil {
+		return
+	}
+
+	mkdirRec(filepath.Dir(dirname))
+	os.Mkdir(dirname, 0777)
+}
+
+// https://medium.com/eureka-engineering/multipart-file-upload-in-golang-c4a8eb15a3ee
+func handleUpload(w http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodPost {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	// TODO handle multiple files with one request.
+
+	name := req.FormValue("name")
+	formFile, _, err := req.FormFile("data")
+	//formFile, fileHeader, err := req.FormFile("data")
+	if err != nil {
+		// TODO error
+		fmt.Println("error")
+		return
+	}
+	defer formFile.Close()
+
+	topPath := "./"
+	filename, _ := filepath.Abs(topPath + name)
+
+	fmt.Println(filename)
+	_, err = os.Stat(filepath.Dir(filename))
+	if err != nil {
+		mkdirRec(filepath.Dir(filename))
+	}
+
+	saveFile, err := os.Create(filename)
+	if err != nil {
+		// TODO error
+		fmt.Println("error")
+		return
+	}
+	defer saveFile.Close()
+
+	_, err = io.Copy(saveFile, formFile)
+	if err != nil {
+		// TODO error
+		fmt.Println("error")
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+}
+
 func main() {
-	http.HandleFunc("/", fileHandler)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	http.HandleFunc("/", router)
+	// TODO port
+	// TODO target directory
+	log.Fatal(http.ListenAndServe(":9999", nil))
 }

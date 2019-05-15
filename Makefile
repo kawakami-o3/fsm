@@ -2,7 +2,7 @@
 all: build
 
 build:
-	#goimports -w -l .
+	goimports -w -l .
 	statik -src templates -m -f
 	go build
 

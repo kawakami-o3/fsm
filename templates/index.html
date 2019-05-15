@@ -1,7 +1,94 @@
 <html>
 	<head>
+		<script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.js"></script>
+		<script type="text/javascript">
+			$(()=>{
+				$dropArea = $('#drop_area');
+				console.log($dropArea);
+				$dropArea.on("dragover", (e)=>{
+					console.log("over");
+					e.preventDefault();
+				});
+
+				function handleFile(entry, list) {
+					return new Promise(function(resolve) {
+						if (entry.isFile) {
+							entry.file(function(f) {
+								list.push(f);
+								resolve();
+							});
+						} else if (entry.isDirectory) {
+							let directoryReader = entry.createReader();
+							directoryReader.readEntries(function(entries){
+								Promise.all(entries.map(function(i){
+									return new Promise(function(r){
+										handleFile(i, list).then(r);
+									})
+								})).then(function(){
+									resolve();
+								});
+							});
+						}
+					});
+				}
+
+				$dropArea.on("drop", (_e)=>{
+					console.log("drop");
+					var e = _e;
+					if (_e.originalEvent) {
+						e = _e.originalEvent;
+					}
+					e.stopPropagation();
+					e.preventDefault();
+
+					var lst = new Array();
+
+					Promise.all([].map.call(e.dataTransfer.items, function(item, index) {
+						let file = item.webkitGetAsEntry();
+						//return Promise.resolve([file, lst]).then(function(arr) { handleFile(arr[0], arr[1]); });
+						//return Promise.resolve().then(function(arr) { handleFile(file, lst); });
+						return handleFile(file, lst);
+
+					})).then(function() {
+
+						//console.log(lst);
+						//var promise = Promise.resolve();
+						Promise.all(lst.map(function(entry) {
+
+							//console.log(entry);
+							var formData = new FormData();
+
+							// FIXME missing basename in Chrome.
+							formData.append('name', entry.webkitRelativePath ? entry.webkitRelativePath : entry.name);
+							formData.append('data', entry);
+
+							return $.ajax({
+								url: "/upload",
+								type: "POST",
+								data: formData,
+								processData: false,
+								contentType: false
+							}).then(function(){
+								console.log(['ok', entry]);
+							}).fail(function(err){
+								console.log(err);
+							});
+							/* }).always(()=>{ Promise.resolve(); }); */
+						})).then(function() {
+							//location.reload();
+							console.log('uploading');
+						});
+					});
+				});
+			});
+
+		</script>
 	</head>
 	<body>
+		<div id="drop_area" style="background-color:#f0f0f0;width:95%;padding:10px;border:2px dashed #808080;border-radius:5px;">
+			Drag and drop your file here.
+		</div>
+
 		<ul>
 			{{#files}}
 			<li><a href="{{url}}">{{name}}</a></li>
