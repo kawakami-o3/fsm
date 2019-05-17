@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -658,9 +659,16 @@ func handleUpload(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
+var (
+	portOpt = flag.String("port", "8080", "port option")
+)
+
 func main() {
+	flag.Parse()
+
 	http.HandleFunc("/", router)
-	// TODO port
 	// TODO target directory
-	log.Fatal(http.ListenAndServe(":8080", nil))
+
+	port := ":" + *portOpt
+	log.Fatal(http.ListenAndServe(port, nil))
 }
