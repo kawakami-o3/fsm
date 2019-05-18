@@ -5,7 +5,7 @@ File Sharing for Minimalists
 
 - [X] file downloader which is compatible with FileServer.
 - [X] The template system for a file browser. 
-- [ ] file uploader.
+- [X] file uploader.
 - [ ] HTTPS
 - [ ] access control
 
