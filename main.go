@@ -23,8 +23,6 @@ import (
 	_ "github.com/kawakami-o3/souko/statik"
 )
 
-var root = http.Dir(".")
-
 const TimeFormat = "Mon, 02 Jan 2006 15:04:05 GMT"
 const sniffLen = 512
 
@@ -74,12 +72,16 @@ func router(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func root() http.Dir {
+	return http.Dir(*dirOpt)
+}
+
 func handleFiles(w http.ResponseWriter, req *http.Request) {
 
 	//targetPath := path.Clean(req.URL.Path)
 	targetPath := req.URL.Path[len(filesUrlTop):]
 
-	f, err := root.Open(targetPath)
+	f, err := root().Open(targetPath)
 	if err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		return
@@ -106,7 +108,7 @@ func handleFiles(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if s.IsDir() {
-		files, _ := ioutil.ReadDir("./" + targetPath) // TODO error handling
+		files, _ := ioutil.ReadDir(*dirOpt + "/" + targetPath) // TODO error handling
 
 		entries := []map[string]string{}
 		for _, f := range files {
@@ -403,7 +405,7 @@ func serveFile(w http.ResponseWriter, req *http.Request, s os.FileInfo) {
 	}
 
 	name := s.Name()
-	content, err := root.Open(name)
+	content, err := root().Open(name)
 	if err != nil {
 		// TODO error
 		return
@@ -632,7 +634,7 @@ func handleUpload(w http.ResponseWriter, req *http.Request) {
 	}
 	defer formFile.Close()
 
-	topPath := "./"
+	topPath := *dirOpt + "/"
 	filename, _ := filepath.Abs(topPath + name)
 
 	fmt.Println(filename)
@@ -661,13 +663,13 @@ func handleUpload(w http.ResponseWriter, req *http.Request) {
 
 var (
 	portOpt = flag.String("port", "8080", "port option")
+	dirOpt  = flag.String("dir", ".", "dir option")
 )
 
 func main() {
 	flag.Parse()
 
 	http.HandleFunc("/", router)
-	// TODO target directory
 
 	port := ":" + *portOpt
 	log.Fatal(http.ListenAndServe(port, nil))
