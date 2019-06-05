@@ -1,5 +1,6 @@
 # souko
-File Sharing for Minimalists
+
+File Sharing Server for Minimalists
 
 # Installation
 
