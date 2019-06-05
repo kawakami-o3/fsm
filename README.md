@@ -1,6 +1,18 @@
 # souko
 File Sharing for Minimalists
 
+# Installation
+
+```
+go get github.com/kawakami-o3/souko
+```
+
+# Usage
+
+```
+% souko --port 8888 --dir .
+```
+
 # ToDo
 
 - [X] file downloader which is compatible with FileServer.
