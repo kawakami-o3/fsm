@@ -18,6 +18,7 @@ go get github.com/kawakami-o3/souko
 - [X] file downloader which is compatible with FileServer.
 - [X] The template system for a file browser. 
 - [X] file uploader.
+- [ ] auto reload after uploading a file.
 - [ ] HTTPS
 - [ ] access control
 
