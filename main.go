@@ -68,7 +68,7 @@ func router(w http.ResponseWriter, req *http.Request) {
 		// upload
 		handleUpload(w, req)
 	} else {
-		redirect(w, req, "/files/")
+		redirect(w, req, filesUrlTop+"/")
 	}
 }
 
@@ -112,8 +112,12 @@ func handleFiles(w http.ResponseWriter, req *http.Request) {
 
 		entries := []map[string]string{}
 		for _, f := range files {
+			url := fmt.Sprintf("%s%s", req.RequestURI, f.Name())
+			if f.IsDir() {
+				url += "/"
+			}
 			entries = append(entries, map[string]string{
-				"url":  fmt.Sprintf("%s%s", req.RequestURI, f.Name()),
+				"url":  url,
 				"name": f.Name(),
 			})
 		}
